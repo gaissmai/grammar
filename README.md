@@ -28,7 +28,7 @@ Complex rules can be assembled by simpler rules using string interpolation.
     $
 ```
 
-## ATTENTION: it's in production use but the API will still change
+## ATTENTION: it's in personel production use but the API is still subject to change
 
 ```
 package grammar // import "github.com/gaissmai/grammar"
