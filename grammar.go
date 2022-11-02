@@ -117,12 +117,12 @@ func (g *Grammar) add(ruleName ruleName, pattern string) error {
 	r := &rule{name: ruleName, pattern: pattern}
 
 	r.subrules = findSubrules(r)
-	for _, dep := range r.subrules {
-		if !rxMatchSubRuleStrict.MatchString(string(dep)) {
-			return fmt.Errorf("grammar %q, rule %q, wrong subrule name %q", g.name, ruleName, dep)
+	for _, subrule := range r.subrules {
+		if !rxMatchSubRuleStrict.MatchString(string(subrule)) {
+			return fmt.Errorf("grammar %q, rule %q, wrong subrule name %q", g.name, ruleName, subrule)
 		}
 
-		if dep == r.name {
+		if subrule == r.name {
 			return fmt.Errorf("grammar %q, rule %q is self referencing", g.name, ruleName)
 		}
 	}
