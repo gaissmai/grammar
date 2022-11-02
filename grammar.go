@@ -53,13 +53,6 @@ var (
 
 // Trim removes all comments and whitespace from string.
 //
-//  input: `
-//     foo bar // baz
-//      taz
-//  `
-//
-//  result: `foobartaz`
-//
 // Trim is a helper function and would normally not be public,
 // but it is also helpful if you don't want to build whole grammars,
 // but just want to remove whitespace and comments from patterns.
