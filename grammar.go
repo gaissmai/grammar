@@ -1,6 +1,7 @@
 // package grammar allows defining regexp rules with comments, whitespace and
 // newlines to make them less dense, and easier to read:
 //
+//    `
 //     [+-]?                // first, match an optional sign
 //     (                    // then match integers or f.p. mantissas:
 //         \d+\.\d+         // mantissa of the form a.b
@@ -9,19 +10,20 @@
 //        |\d+              // integer of the form a
 //     )
 //     ( [eE] [+-]? \d+ )?  // finally, optionally match an exponent
+//    `
 //
 // result: [+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?
 //
 // Complex rules can be assembled by simpler rules (subrules) using string interpolation.
 //
+//     `
 //      ^
 //        ${number}        // start with number
-//        (?:
+//        (?:              // don't capture
 //          \s+ ${number}  // followed by one ore more numbers, separated by whitespace
 //        )+
 //     $
-//
-// All rules together form a grammar.
+//    `
 //
 package grammar
 
@@ -222,7 +224,7 @@ func (g *Grammar) Rx(name string) (*regexp.Regexp, error) {
 	return r.rx, nil
 }
 
-// findSubrules s a helper to find all ${RULENAME} in string and returns the slice of ruleNames or nil.
+// findSubrules is a helper to find all ${RULENAME} in string and returns the slice of ruleNames or nil.
 func findSubrules(r *rule) []ruleName {
 	var result []ruleName
 
