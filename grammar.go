@@ -1,7 +1,7 @@
 // package grammar allows defining regexp rules with comments, whitespace and
 // newlines to make them less dense, and easier to read:
 //
-//    `
+//    `                     // a NUMBER
 //     [+-]?                // first, match an optional sign
 //     (                    // then match integers or f.p. mantissas:
 //         \d+\.\d+         // mantissa of the form a.b
@@ -18,12 +18,15 @@
 //
 //     `
 //      ^
-//        ${number}        // start with number
+//        ${NUMBER}        // start with number
 //        (?:              // don't capture
-//          \s+ ${number}  // followed by one ore more numbers, separated by whitespace
+//          \s+ ${NUMBER}  // followed by one ore more numbers, separated by whitespace
 //        )+
 //     $
 //    `
+//
+// Any number of rules can be added to a grammar, dependent or independent,
+// as long as there are no cyclic dependencies.
 //
 package grammar
 
