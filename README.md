@@ -6,11 +6,11 @@ newlines to make them less dense, and easier to read:
 ```
    `                       // number: 1.2e+42, .3, 11, 42., 3.1415, ...
     [+-]?                  // first, match an optional sign
-    (?:                    // then match integers or f.p. mantissas:
+    (?:                    // then match f.p mantissas or integer:
          \d+ \. \d+        // mantissa of the form a.b
-       | \d+ \.            // mantissa of the form a.
-       |     \. \d+        // mantissa of the form .b
-       | \d+               // integer of the form a
+       | \d+ \.            // or mantissa of the form a.
+       |     \. \d+        // or mantissa of the form .b
+       | \d+               // or integer of the form a
     )
     (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
     `
