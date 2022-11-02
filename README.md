@@ -4,14 +4,15 @@ package grammar allows defining regexp rules with comments, whitespace and
 newlines to make them less dense, and easier to read:
 
 ```
-   `[+-]?                // first, match an optional sign
-    (                    // then match integers or f.p. mantissas:
-         \d+ \. \d+      // mantissa of the form a.b
-       | \d+ \.          // mantissa of the form a.
-       |     \. \d+      // mantissa of the form .b
-       | \d+             // integer of the form a
+   `                       // number: 1.2e+42, .3, 11, 42., 3.1415, ...
+    [+-]?                  // first, match an optional sign
+    (?:                    // then match integers or f.p. mantissas:
+         \d+ \. \d+        // mantissa of the form a.b
+       | \d+ \.            // mantissa of the form a.
+       |     \. \d+        // mantissa of the form .b
+       | \d+               // integer of the form a
     )
-    ( [eE] [+-]? \d+ )?  // finally, optionally match an exponent
+    (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
     `
 ```
 
@@ -20,10 +21,10 @@ result: `[+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?`
 Complex rules can be assembled by simpler rules using string interpolation.
 
 ```
-     ^
+     ^                  // 1.23   3.1415 0.5E3 ...
        ${number}        // start with number
        (?:
-         \s+ ${number}  // followed by one ore more numbers, separated by whitespace
+         \s+ ${number}  // followed by one ore more numbers, separated by whitespace(s)
        )+
     $
 ```
