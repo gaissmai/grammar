@@ -6,10 +6,10 @@ newlines to make them less dense, and easier to read:
 ```
    `[+-]?                // first, match an optional sign
     (                    // then match integers or f.p. mantissas:
-        \d+\.\d+         // mantissa of the form a.b
-       |\d+\.            // mantissa of the form a.
-       |\.\d+            // mantissa of the form .b
-       |\d+              // integer of the form a
+         \d+ \. \d+      // mantissa of the form a.b
+       | \d+ \.          // mantissa of the form a.
+       |     \. \d+      // mantissa of the form .b
+       | \d+             // integer of the form a
     )
     ( [eE] [+-]? \d+ )?  // finally, optionally match an exponent
     `
@@ -27,6 +27,9 @@ Complex rules can be assembled by simpler rules using string interpolation.
        )+
     $
 ```
+
+Any number of rules can be added to a grammar, dependent or independent,
+as long as there are no cyclic dependencies.
 
 ## ATTENTION: it's in personel production use but the API is still subject to change
 
