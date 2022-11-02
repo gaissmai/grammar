@@ -15,7 +15,7 @@ func ExampleTrim() {
               |     \. \d+         // or mantissa of the form .b
               | \d+                // or integer of the form a
             )
-						(?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
+            (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
          `
 	fmt.Println(grammar.Trim(number))
 
@@ -24,30 +24,35 @@ func ExampleTrim() {
 }
 
 func ExampleNew() {
-	number := `
-            [+-]?                  // first, match an optional sign
-            (?:                    // then match mantissas:
-                \d+ \. \d+         // mantissa of the form a.b
-              | \d+ \.             // or mantissa of the form a.
-              |     \. \d+         // or mantissa of the form .b
-              | \d+                // or integer of the form a
-            )
-            (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
-         `
-	cmp := `\s+ ${NUMBER} \s+ cmp \s+ ${NUMBER} \s+`
+	subrule := `                       // NUMBER
+              [+-]?                  // first, match an optional sign
+              (?:                    // then match mantissas:
+                  \d+ \. \d+         // mantissa of the form a.b
+                | \d+ \.             // or mantissa of the form a.
+                |     \. \d+         // or mantissa of the form .b
+                | \d+                // or integer of the form a
+              )
+              (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
+            `
+
+	rule := `^ \s*                       // MANY NUMBERS
+                ${NUMBER}              // star with number
+                (?: \s+ ${NUMBER} )+   // foolowed by one or more numbers, separated by whitespace
+              $
+             `
 
 	g := grammar.New("example_interpolation")
 
 	// error handling neglected in this example for better clarity
-	g.Add("CMP", cmp)
-	g.Add("NUMBER", number)
+	g.Add("MANY", rule)
+	g.Add("NUMBER", subrule)
 	g.Compile()
-	rx, _ := g.Rx("CMP")
+	rx, _ := g.Rx("MANY")
 
 	fmt.Println(rx)
 
 	// Output:
-	// \s+[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?\s+cmp\s+[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?\s+
+	// ^\s*[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?(?:\s+[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?)+$
 }
 
 func ExampleAddRaw() {
