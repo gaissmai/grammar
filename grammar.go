@@ -242,7 +242,7 @@ func findSubrules(r *rule) []ruleName {
 	return result
 }
 
-// compile s a sequence of actions:
+// compile is a sequence of actions:
 // parse the pattern as text/template,
 // execute (interpolate/substitute) all subrules
 // and compile the final string to regexp.
