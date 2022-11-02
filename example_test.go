@@ -36,8 +36,8 @@ func ExampleNew() {
             `
 
 	rule := `^ \s*                       // MANY NUMBERS
-                ${NUMBER}              // star with number
-                (?: \s+ ${NUMBER} )+   // foolowed by one or more numbers, separated by whitespace
+                ${NUMBER}              // start with number
+                (?: \s+ ${NUMBER} )+   // followed by one or more numbers, separated by whitespace
               $
              `
 
