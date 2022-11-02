@@ -20,14 +20,15 @@ result: `[+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?`
 Complex rules can be assembled by simpler rules using string interpolation.
 
 ```
-    `^
-         ${number}       // one interpolated regexp for number
-           \s+           // one or more whitespace
-     (?: ${number} )*    // zero or more numbers
-    $`
+     ^
+       ${number}        // start with number
+       (?:
+         \s+ ${number}  // followed by one ore more numbers, separated by whitespace
+       )+
+    $
 ```
 
-All rules together form a grammar.
+## ATTENTION: it's in production use but the API will still change
 
 ```
 package grammar // import "github.com/gaissmai/grammar"
