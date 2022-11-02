@@ -55,7 +55,7 @@ func ExampleNew() {
 	// ^\s*[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?(?:\s+[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?)+$
 }
 
-func ExampleAddRaw() {
+func ExampleGrammar_AddRaw() {
 	verbatim := `^\QExactly like this!\E$`
 	g := grammar.New("example_raw")
 
