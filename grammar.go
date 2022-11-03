@@ -34,7 +34,6 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
-	"sort"
 	"text/template"
 )
 
@@ -148,61 +147,22 @@ func (g *Grammar) Compile() error {
 	}
 
 	// for all rules check if subrules exists in grammar
-	// also build the topo datastruct (slice of all rules) in this run
-	topo := make([]*rule, 0, len(g.rules))
-
 	for _, r := range g.rules {
 		for _, subrule := range r.subrules {
 			if _, ok := g.rules[subrule]; !ok {
 				return fmt.Errorf("compiling grammar %q, rule %q depends on missing subrule %q", g.name, r.name, subrule)
 			}
 		}
-
-		topo = append(topo, r)
 	}
 
-	// poor mans toposort algo
-	// sort rules by number of dependencies, ascending
-	sort.Slice(topo, func(i, j int) bool { return len(topo[i].subrules) < len(topo[j].subrules) })
+	for _, name := range g.toposort() {
+		r := g.rules[name]
 
-	// for simplistic cyclic redundancy detection
-	loop := 0
-
-OUTER:
-	for {
-		// all rules compiled, finish
-		if len(topo) == 0 {
-			g.compiled = true
-
-			return nil
-		}
-
-		loop++
-
-		// TODO, make real toposort
-		if loop > 10*len(g.rules) {
-			remaining := []ruleName{}
-			for i := range topo {
-				remaining = append(remaining, topo[i].name)
-			}
-
-			return fmt.Errorf("grammar %q, (maybe) cyclic dependency in rules: %v", g.name, remaining)
-		}
-
-		// unshift rule
-		r := topo[0]
-		topo = topo[1:]
-
-		// are all subrules for this rule compiled?
-		// ... and build replaceMap for template parse & execute
 		replace := replaceMap{}
 		for _, name := range r.subrules {
 			subrule := g.rules[name]
 			if !subrule.compiled {
-				// nope, push this rule at end of stack
-				topo = append(topo, r)
-
-				continue OUTER
+				panic("logic error")
 			}
 
 			// replace ${SUBRULE} with final string of SUBRULE
@@ -214,6 +174,8 @@ OUTER:
 			return fmt.Errorf("grammar %q, %w", g.name, err)
 		}
 	}
+
+	return nil
 }
 
 // Rx returns the compiled regexp for named rule or error if rule is not added or not compiled.
@@ -306,4 +268,64 @@ func compile(r *rule, replace replaceMap) error {
 	r.compiled = true
 
 	return nil
+}
+
+type (
+	nodes map[ruleName]links
+	links map[ruleName]bool
+)
+
+func (g *Grammar) toposort() []ruleName {
+	// fill topoMap
+	topo := make(nodes, len(g.rules))
+	for node, rule := range g.rules {
+		for _, links := range rule.subrules {
+			topo[node][links] = true
+		}
+	}
+
+	// nodes in toposort order
+	var result []ruleName
+	// do til break condition
+	for {
+
+		// break, we are ready
+		if len(topo) == 0 {
+			break
+		}
+
+		// find terminal nodes
+		nextNodes := nodesWithNoLinks(topo)
+		if len(nextNodes) == 0 && len(topo) != 0 {
+			// TODO remaining topoMap
+			// cyclic dependency
+			// panic(fmt.Errorf("grammar %q, (maybe) cyclic dependency in rules: %v", g.name, remaining)
+			panic(topo)
+		}
+
+		for _, node := range nextNodes {
+			// push terminal node to result
+			result = append(result, node)
+
+			// delete terminal node from topo
+			delete(topo, node)
+
+			// delete terminal nodes from links
+			for _, links := range topo {
+				delete(links, node)
+			}
+		}
+	}
+
+	return result
+}
+
+func nodesWithNoLinks(topo nodes) []ruleName {
+	var result []ruleName
+	for node, links := range topo {
+		if len(links) == 0 {
+			result = append(result, node)
+		}
+	}
+	return result
 }
