@@ -82,11 +82,10 @@ type Grammar struct {
 // parsed and interpolated with regexp strings from other rules in same grammar.
 type rule struct {
 	name     ruleName       // give the rule a name
+	subrules []ruleName     // a slice of all ${SUBRULE} the rule depends on
 	pattern  string         // the input, trimmed or unaltered
 	final    string         // all subrules interpolated
-	subrules []ruleName     // a slice of all ${SUBRULE} the rule depends on
 	rx       *regexp.Regexp // the compiled regexp
-	compiled bool           // all subrules interpolated and the regexp compiled
 }
 
 // New initializes a new grammar.
@@ -223,7 +222,7 @@ func findSubrules(r *rule) []ruleName {
 // execute (interpolate/substitute) all subrules
 // and compile the final string to regexp.
 func compile(r *rule, replace replaceMap) error {
-	if r.compiled {
+	if r.rx != nil {
 		panic("logic error, rule is already compiled")
 	}
 
@@ -263,13 +262,10 @@ func compile(r *rule, replace replaceMap) error {
 
 	r.final = buf.String()
 
-	rx, err := regexp.Compile(r.final)
+	r.rx, err = regexp.Compile(r.final)
 	if err != nil {
 		return fmt.Errorf("regexp compilation of rule %q, %w", r.name, err)
 	}
-
-	r.rx = rx
-	r.compiled = true
 
 	return nil
 }
@@ -299,29 +295,31 @@ func (g *Grammar) toposort() ([]ruleName, error) {
 		}
 	}
 
-	// make nodes in toposort order
 	var result []ruleName
+
 	// do til break condition
 	for {
-		// break, we are ready
+		// successful break, are we ready, topo map emptied?
 		if len(topo) == 0 {
 			break
 		}
 
-		// find terminalNodes nodes
-		terminalNodes := nodesWithNoLinks(topo)
+		nextNodes := nodesWithoutLinks(topo)
 
-		// cyclic dependency?
-		if len(terminalNodes) == 0 && len(topo) != 0 {
+		// cyclic dependency!
+		if len(nextNodes) == 0 {
+			// collect remaining rules for error reporting
 			var remaining []ruleName
 			for ruleName := range topo {
 				remaining = append(remaining, ruleName)
 			}
 
+			// unsuccessful return with error
 			return nil, fmt.Errorf("grammar %q, (maybe) cyclic dependency in rules: %v", g.name, remaining)
 		}
 
-		for _, node := range terminalNodes {
+		// handle the next nodes in topo sort order
+		for _, node := range nextNodes {
 			// push terminal node to result
 			result = append(result, node)
 
@@ -338,8 +336,8 @@ func (g *Grammar) toposort() ([]ruleName, error) {
 	return result, nil
 }
 
-// nodesWithNoLinks returns terminal nodes, nodes with all dependenciesaresolved.
-func nodesWithNoLinks(topo nodes) []ruleName {
+// nodesWithoutLinks returns terminal nodes
+func nodesWithoutLinks(topo nodes) []ruleName {
 	var result []ruleName
 
 	for node, links := range topo {
