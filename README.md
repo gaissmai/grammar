@@ -1,15 +1,22 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/gaissmai/grammar.svg)](https://pkg.go.dev/github.com/gaissmai/grammar)
 
-## usage
+
+`package grammar` is designed to make long and convoluted regular expressions easier to handle. 
+
+## Features
+* Enable the use of whitespaces withing regexes to make them less dense.
+* Allow spreading regexes across multiple lines to allow easier grouping. 
+* Allow inline comments in regexes.
+* Interpolation of regexes: Allows a regex to be composed of multiple sub-rules. 
+
+## Usage
 
 ```
 package grammar // import "github.com/gaissmai/grammar"
 ```
-
-
-package grammar allows defining regexp rules with comments, whitespace and
-newlines to make them less dense, and easier to read:
-
+### Whitespaces / Newlines
+Examlple regex containing white-spaces and newlines to make it more readable. 
+This regex matches number of the form `1.2e+42, .3, 11, 42., 3.1415,...`. 
 ```
    `                       // NUMBER: 1.2e+42, .3, 11, 42., 3.1415, ...
     [+-]?                  // first, match an optional sign
@@ -22,10 +29,11 @@ newlines to make them less dense, and easier to read:
     (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
     `
 ```
+This yields `[+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?` but is much more readable. 
 
-result: `[+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?`
-
-Complex rules can be assembled by simpler subrules using string interpolation.
+### Regex Interpolation
+Complex rules can be comprised of  simpler subrules using string interpolation.
+For example: Using the above regex as `${NUMBER}`, you can easily assemble a rule that matches many numbers using the following snippet:
 
 ```
      ^                  // 1.23   3.1415 0.5E3 ...
