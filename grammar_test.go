@@ -51,8 +51,7 @@ func TestAddOneRule(t *testing.T) {
 
 	rx, err := g.Rx("ONE")
 	if err != nil {
-		t.Error(err)
-		t.Fail()
+		t.Fatal(err)
 	}
 
 	want := regexp.MustCompile(`^.*`)
