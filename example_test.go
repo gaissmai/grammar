@@ -2,6 +2,7 @@ package grammar_test
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gaissmai/grammar"
 )
@@ -23,6 +24,7 @@ func ExampleTrim() {
 	// [+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?
 }
 
+//nolint:errcheck // for example brevity
 func ExampleNew() {
 	subrule := `                       // NUMBER
               [+-]?                  // first, match an optional sign
@@ -55,14 +57,22 @@ func ExampleNew() {
 	// ^\s*[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?(?:\s+[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)(?:[eE][+-]?\d+)?)+$
 }
 
-func ExampleGrammar_AddRaw() {
+func ExampleGrammar_AddVerbatim() {
 	verbatim := `^\QExactly like this!\E$`
 	g := grammar.New("example_raw")
 
-	// error handling neglected in this example for better clarity
-	g.AddRaw("RAW_RULE", verbatim)
-	g.Compile()
-	rx, _ := g.Rx("RAW_RULE")
+	if err := g.AddVerbatim("RAW_RULE", verbatim); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := g.Compile(); err != nil {
+		log.Fatal(err)
+	}
+
+	rx, err := g.Rx("RAW_RULE")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Println(rx)
 

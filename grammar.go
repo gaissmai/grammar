@@ -78,11 +78,11 @@ type Grammar struct {
 // parsed and interpolated with regexp strings from other rules in same grammar.
 type rule struct {
 	name     ruleName       // give the rule a name
-	pattern  string         // the trimmed input, but see AddRaw
-	final    string         // the parsed and interpolated string
-	compiled bool           // all dependencies for rule are interpolated and the regexp compiled
+	pattern  string         // the input, trimmed or unaltered
+	final    string         // all subrules interpolated
 	subrules []ruleName     // a slice of all ${SUBRULE} the rule depends on
 	rx       *regexp.Regexp // the compiled regexp
+	compiled bool           // all subrules interpolated and the regexp compiled
 }
 
 // New initializes a new grammar.
@@ -99,9 +99,9 @@ func (g *Grammar) Add(name string, pattern string) error {
 	return g.add(ruleName(name), Trim(pattern))
 }
 
-// AddRaw is similar to Add, but no trimming takes place.
+// AddVerbatim is similar to Add, but no trimming takes place.
 // Use this method if whitespace is significant.
-func (g *Grammar) AddRaw(name string, pattern string) error {
+func (g *Grammar) AddVerbatim(name string, pattern string) error {
 	return g.add(ruleName(name), pattern)
 }
 

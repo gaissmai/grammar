@@ -66,10 +66,9 @@ func TestAddRuleTwice(t *testing.T) {
 
 	raw := `^ .* // test`
 	checkErr(t, g.Add("ONE", raw))
-	err := g.Add("ONE", raw)
 
 	// expect error
-	if err == nil {
+	if err := g.Add("ONE", raw); err == nil {
 		t.Error("expected error adding duplicate rules")
 	}
 }
@@ -82,8 +81,7 @@ func TestRegexpCompile(t *testing.T) {
 	checkErr(t, g.Add("ONE", raw))
 
 	// expect error
-	err := g.Compile()
-	if err == nil {
+	if err := g.Compile(); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -98,8 +96,7 @@ func TestTemplateError(t *testing.T) {
 	checkErr(t, g.Add("TWO", two))
 
 	// expect error
-	err := g.Compile()
-	if err == nil {
+	if err := g.Compile(); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -137,8 +134,7 @@ func TestSelfReference(t *testing.T) {
 	raw := `interpolate ${ONE} here`
 
 	// expect error
-	err := g.Add("ONE", raw)
-	if err == nil {
+	if err := g.Add("ONE", raw); err == nil {
 		t.Error("expected error, already compiled")
 	}
 }
@@ -155,8 +151,7 @@ func TestCyclicReference(t *testing.T) {
 	checkErr(t, g.Add("TWO", two))
 	checkErr(t, g.Add("TRE", tre))
 
-	err := g.Compile()
-	if err == nil {
+	if err := g.Compile(); err != nil {
 		t.Error("expected error, cyclic reference")
 	}
 }
@@ -230,8 +225,9 @@ func TestIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := rx.String()
+	got := rx.String() //nolint:ifshort // for clarity
 	want := `\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|(?:[[:xdigit:]:]+:[[:xdigit:]:]+|::)`
+
 	if want != got {
 		t.Errorf("minimalistic IP rules\nwant: %s\ngot: %s\n", want, got)
 	}
