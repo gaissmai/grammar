@@ -38,18 +38,23 @@ import (
 	"text/template"
 )
 
-// make rule names type safe, too many strings on the road
+// Make rule names type safe, too many strings on the road.
 type ruleName string
+
+// isValid reports whether the rulename adheres to a certain pattern.
+func (name ruleName) isValid() bool {
+	return rxMatchSubRuleStrict.MatchString(string(name))
+}
 
 // substitute/interploate ${SUBRULE} with final string.
 type replaceMap map[ruleName]string
 
 var (
-	// regexps for trim
+	// regexps for trim.
 	rxComment = regexp.MustCompile(`(?m://.*$)`)
 	rxSpaces  = regexp.MustCompile(`\s+`)
 
-	// regexps for interpolation
+	// regexps for interpolation.
 	rxGrepSubRuleRelaxed = regexp.MustCompile(Trim(`\$\{ (?P<SUBRULE> [^{}]+ ) \}`))
 	rxMatchSubRuleStrict = regexp.MustCompile(Trim(`^ [a-zA-Z_] \w* $`))
 )
@@ -106,6 +111,10 @@ func (g *Grammar) AddVerbatim(name string, pattern string) error {
 }
 
 func (g *Grammar) add(ruleName ruleName, pattern string) error {
+	if !ruleName.isValid() {
+		return fmt.Errorf("grammar %q, rulename %q not allowed", g.name, ruleName)
+	}
+
 	if g.compiled {
 		return fmt.Errorf("grammar %q is already compiled, can't add rule %q", g.name, ruleName)
 	}
@@ -140,7 +149,7 @@ func (g *Grammar) Compile() error {
 
 	// for all rules check if subrules exists in grammar
 	// also build the topo datastruct (slice of all rules) in this run
-	var topo []*rule
+	topo := make([]*rule, 0, len(g.rules))
 
 	for _, r := range g.rules {
 		for _, subrule := range r.subrules {
@@ -176,6 +185,7 @@ OUTER:
 			for i := range topo {
 				remaining = append(remaining, topo[i].name)
 			}
+
 			return fmt.Errorf("grammar %q, (maybe) cyclic dependency in rules: %v", g.name, remaining)
 		}
 
@@ -257,13 +267,13 @@ func compile(r *rule, replace replaceMap) error {
 	// map vars to functions, allows ${foo} instead of ${.foo} in template
 	fmap := template.FuncMap{}
 
-	// substitute subrule to final string of subrule
-	for k, v := range replace {
-		v := v
-		fmap[string(k)] = func() string { return v }
+	// substitute subrule to subrules final string
+	for subrule, final := range replace {
+		final := final // closure, solve the for loop variable problem, sic
+		fmap[string(subrule)] = func() string { return final }
 	}
 
-	// add the substitutions to the templates function map
+	// add the replacements to the templates function map
 	t.Funcs(fmap)
 
 	// allow ${foo} in template as action foo instead of {{foo}}

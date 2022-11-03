@@ -4,7 +4,7 @@
 `package grammar` is designed to make long and convoluted regular expressions easier to handle. 
 
 ## Features
-* Enable the use of whitespaces withing regexes to make them less dense.
+* Enable the use of whitespaces within regexes to make them less dense.
 * Allow spreading regexes across multiple lines to allow easier grouping. 
 * Allow inline comments in regexes.
 * Interpolation of regexes: Allows a regex to be composed of multiple sub-rules. 
@@ -15,7 +15,7 @@
 package grammar // import "github.com/gaissmai/grammar"
 ```
 ### Whitespaces / Newlines
-Examlple regex containing white-spaces and newlines to make it more readable. 
+Example regex containing white-spaces and newlines to make it more readable. 
 This regex matches number of the form `1.2e+42, .3, 11, 42., 3.1415,...`. 
 ```
    `                       // NUMBER: 1.2e+42, .3, 11, 42., 3.1415, ...
@@ -32,8 +32,9 @@ This regex matches number of the form `1.2e+42, .3, 11, 42., 3.1415,...`.
 This yields `[+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?` but is much more readable. 
 
 ### Regex Interpolation
-Complex rules can be comprised of  simpler subrules using string interpolation.
-For example: Using the above regex as `${NUMBER}`, you can easily assemble a rule that matches many numbers using the following snippet:
+Complex rules can be comprised of simpler subrules using string interpolation.
+For example: Using the above regex as `${NUMBER}`, you can easily assemble a rule
+that matches many numbers using the following snippet:
 
 ```
      ^                  // 1.23   3.1415 0.5E3 ...
@@ -51,5 +52,4 @@ The package has a very thin API, please see the examples in the documentation.
 
 ## ATTENTION
 
-The package is in personel production use but the API is still subject to change (with semver in mind).
-
+The package is already in production use, but the API may still change.

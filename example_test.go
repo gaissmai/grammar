@@ -26,8 +26,8 @@ func ExampleTrim() {
 
 //nolint:errcheck // for example brevity
 func ExampleNew() {
-  // First we have to define all rules that we'd like to use...
-	subrule := `                       // NUMBER
+	// First we have to define all rules that we'd like to use...
+	number := `                        // rulename: NUMBER
               [+-]?                  // first, match an optional sign
               (?:                    // then match mantissas:
                   \d+ \. \d+         // mantissa of the form a.b
@@ -37,21 +37,21 @@ func ExampleNew() {
               )
               (?: [eE] [+-]? \d+ )?  // finally, optionally match an exponent
             `
-  // NOTE: Placeholder `NUMBER`
-	rule := `^ \s*                       // MANY NUMBERS
+	// NOTE: Placeholder `NUMBER`
+	many := `^ \s*                       // rulename: MANY
                 ${NUMBER}              // start with number
                 (?: \s+ ${NUMBER} )+   // followed by one or more numbers, separated by whitespace
               $
              `
-  // ... then we create a grammar...
-	g := grammar.New("example_interpolation")
+	// ... then we create a grammar...
+	g := grammar.New("example_with_interpolation")
 
-  // ... and we add our rules to it using our placeholders from above.
+	// ... then we add our rules in any order to it using our placeholders as rulenames.
 	// error handling neglected in this example for better clarity
-	g.Add("MANY", rule)
-	g.Add("NUMBER", subrule)
+	g.Add("MANY", many)
+	g.Add("NUMBER", number)
 
-  // Then the magic happens. 
+	// Then the magic happens.
 	g.Compile()
 	rx, _ := g.Rx("MANY")
 

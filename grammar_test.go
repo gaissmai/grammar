@@ -22,15 +22,16 @@ func TestTrim(t *testing.T) {
 		{
 			name: "complex",
 			input: `
-				foo bar  // baz
-				taz asdf$
-				42       // result
-			`,
+        foo bar  // baz
+        taz asdf$
+        42       // result
+      `,
 			want: "foobartazasdf$42",
 		},
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			got := grammar.Trim(tc.input)
 			if got != tc.want {
@@ -60,7 +61,7 @@ func TestAddOneRule(t *testing.T) {
 	}
 }
 
-func TestAddRuleTwice(t *testing.T) {
+func TestAdd(t *testing.T) {
 	t.Parallel()
 	g := grammar.New("TEST")
 
@@ -151,7 +152,8 @@ func TestCyclicReference(t *testing.T) {
 	checkErr(t, g.Add("TWO", two))
 	checkErr(t, g.Add("TRE", tre))
 
-	if err := g.Compile(); err != nil {
+	// expect error
+	if err := g.Compile(); err == nil {
 		t.Error("expected error, cyclic reference")
 	}
 }
@@ -176,7 +178,7 @@ func TestCompile(t *testing.T) {
 	}
 }
 
-func TestVariableName(t *testing.T) {
+func TestSubruleName(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		input      string
@@ -190,15 +192,50 @@ func TestVariableName(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		g := grammar.New("TESTS")
-		err := g.Add("VAR", tc.input)
-		if tc.expectFail && err == nil {
-			t.Fatalf("AddRule(): %q, want: error, got: %q", tc.input, err)
-		}
 
-		if !tc.expectFail && err != nil {
-			t.Fatalf("AddRule(): %q, want: success, got: %q", tc.input, err)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			err := g.Add("RULE", tc.input)
+			if tc.expectFail && err == nil {
+				t.Fatalf("Add(): %q, want: error, got: %q", tc.input, err)
+			}
+
+			if !tc.expectFail && err != nil {
+				t.Fatalf("Add(): %q, want: success, got: %q", tc.input, err)
+			}
+		})
+	}
+}
+
+func TestRuleName(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		input      string
+		expectFail bool
+	}{
+		{"", true},             // empty string
+		{"Ident", false},       // valid
+		{"_underscore", false}, // valid
+		{"1digit", true},       // not allowed, starts with digit
+		{"hy-phen", true},      // not allowed, has hyphen
+		{"Iden)t", true},       // typo
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		g := grammar.New("TESTS")
+
+		t.Run(tc.input, func(t *testing.T) {
+			err := g.Add(tc.input, "any pattern")
+			if tc.expectFail && err == nil {
+				t.Fatalf("Add(): %q, want: error, got: %q", tc.input, err)
+			}
+
+			if !tc.expectFail && err != nil {
+				t.Fatalf("Add(): %q, want: success, got: %q", tc.input, err)
+			}
+		})
 	}
 }
 
@@ -209,10 +246,10 @@ func TestIP(t *testing.T) {
 	rawIPv4 := ` \d{1,3} \. \d{1,3} \. \d{1,3} \. \d{1,3} ` // just to feed netip.ParseAddr
 
 	rawIPv6 := `(?:                                   // very minimalistic, just to feed netip.ParseAddr
-                	[[:xdigit:] :]+ : [[:xdigit:] :]+ // hexdigits and colon, NO dot, no IP4in6
-							  |
-						    	::                                // unspecified IPv6 against all regular rules
-					    )`
+                  [[:xdigit:] :]+ : [[:xdigit:] :]+ // hexdigits and colon, NO dot, no IP4in6
+                |
+                  ::                                // unspecified IPv6 against all regular rules
+              )`
 
 	g := grammar.New("IP")
 	checkErr(t, g.Add("LikeIP", rawIP))
