@@ -31,10 +31,8 @@
 package grammar
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
-	"text/template"
 )
 
 // Make rule names type safe, too many strings on the road.
@@ -124,12 +122,12 @@ func (g *Grammar) add(ruleName ruleName, pattern string) error {
 	r := &rule{name: ruleName, pattern: pattern}
 
 	r.subrules = findSubrules(r)
-	for _, subrule := range r.subrules {
-		if !rxMatchSubRuleStrict.MatchString(string(subrule)) {
-			return fmt.Errorf("grammar %q, rule %q, wrong subrule name %q", g.name, ruleName, subrule)
+	for _, subName := range r.subrules {
+		if !subName.isValid() {
+			return fmt.Errorf("grammar %q, rule %q, wrong subrule name %q", g.name, ruleName, subName)
 		}
 
-		if subrule == r.name {
+		if subName == r.name {
 			return fmt.Errorf("grammar %q, rule %q is self referencing", g.name, ruleName)
 		}
 	}
@@ -164,19 +162,42 @@ func (g *Grammar) Compile() error {
 
 		replace := replaceMap{}
 
+		// build replace map: replace ${SUBRULE} with final string of SUBRULE
 		for _, subruleName := range rule.subrules {
 			subrule := g.rules[subruleName]
-			// replace ${SUBRULE} with final string of SUBRULE
 			replace[subruleName] = subrule.final
 		}
 
-		// and now parse and execute text/template for this rule and compile the pattern to regexp
-		if err := compile(rule, replace); err != nil {
+		// and now replace the subrules and compile the pattern to regexp
+		if err := rule.compile(replace); err != nil {
 			return fmt.Errorf("grammar %q, %w", g.name, err)
 		}
 	}
 
 	g.compiled = true
+
+	return nil
+}
+
+// compile the regexp for rule, but before replace all subrules with their final string.
+func (r *rule) compile(replace replaceMap) error {
+	if r.rx != nil {
+		panic("logic error, rule is already compiled")
+	}
+
+	// replace the subrules with their final string
+	s := r.pattern
+	for subrule, final := range replace {
+		rx := regexp.MustCompile(`\Q${` + string(subrule) + `}\E`)
+		s = rx.ReplaceAllLiteralString(s, final)
+	}
+	r.final = s
+
+	var err error
+	r.rx, err = regexp.Compile(r.final)
+	if err != nil {
+		return fmt.Errorf("regexp compilation of rule %q, %w", r.name, err)
+	}
 
 	return nil
 }
@@ -215,57 +236,4 @@ func findSubrules(r *rule) []ruleName {
 	}
 
 	return result
-}
-
-// compile is a sequence of actions:
-// parse the pattern as text/template,
-// execute (interpolate/substitute) all subrules
-// and compile the final string to regexp.
-func compile(r *rule, replace replaceMap) error {
-	if r.rx != nil {
-		panic("logic error, rule is already compiled")
-	}
-
-	t := template.New(string(r.name))
-
-	// just a trick to get rid of .Name in templates
-	// map vars to functions, allows ${foo} instead of ${.foo} in template
-	fmap := template.FuncMap{}
-
-	// substitute subrule to subrules final string
-	for subrule, final := range replace {
-		final := final // closure, solve the for loop variable problem, sic
-		fmap[string(subrule)] = func() string { return final }
-	}
-
-	// add the replacements to the templates function map
-	t.Funcs(fmap)
-
-	// allow ${foo} in template as action foo instead of {{foo}}
-	t = t.Delims("${", "}")
-
-	// stop processing on missing key
-	t.Option("missingkey=error")
-
-	t, err := t.Parse(r.pattern)
-	if err != nil {
-		return fmt.Errorf("parsing rule %q, %w", r.name, err)
-	}
-
-	buf := new(bytes.Buffer)
-
-	// here happens the string interpolation ${rulename} with final string of rulename
-	err = t.Execute(buf, nil)
-	if err != nil {
-		return fmt.Errorf("interpolating rule %q, %w", r.name, err)
-	}
-
-	r.final = buf.String()
-
-	r.rx, err = regexp.Compile(r.final)
-	if err != nil {
-		return fmt.Errorf("regexp compilation of rule %q, %w", r.name, err)
-	}
-
-	return nil
 }

@@ -86,21 +86,6 @@ func TestRegexpCompile(t *testing.T) {
 	}
 }
 
-func TestTemplateError(t *testing.T) {
-	t.Parallel()
-	one := `world`
-	two := `hello ${{ONE}}` // ${foo} and not ${{foo}}
-
-	g := grammar.New("TEST")
-	checkErr(t, g.Add("ONE", one))
-	checkErr(t, g.Add("TWO", two))
-
-	// expect error
-	if err := g.Compile(); err == nil {
-		t.Fatal(err)
-	}
-}
-
 func TestMissingRule(t *testing.T) {
 	t.Parallel()
 	g := grammar.New("TEST")
