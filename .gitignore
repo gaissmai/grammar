@@ -10,6 +10,9 @@
 # But not these files...
 !/.gitignore
 
+!*.yml
+!*.yaml
+
 !*.go
 !go.sum
 !go.mod
