@@ -1,4 +1,5 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/gaissmai/grammar.svg)](https://pkg.go.dev/github.com/gaissmai/grammar)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/gaissmai/grammar)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/gaissmai/grammar/actions/workflows/go.yml/badge.svg)](https://github.com/gaissmai/grammar/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gaissmai/grammar)](https://goreportcard.com/report/github.com/gaissmai/grammar)
