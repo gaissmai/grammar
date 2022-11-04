@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/gaissmai/grammar/actions/workflows/go.yml/badge.svg)](https://github.com/gaissmai/grammar/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gaissmai/grammar)](https://goreportcard.com/report/github.com/gaissmai/grammar)
-[![Coverage Status](https://coveralls.io/repos/github/gaissmai/gaissmai/badge.svg?branch=master)](https://coveralls.io/github/gaissmai/grammar?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/gaissmai/grammar/badge.svg?branch=master)](https://coveralls.io/github/gaissmai/grammar?branch=master)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 `package grammar` is designed to make long and convoluted regular expressions easier to handle. 
