@@ -6,7 +6,8 @@ on:
     - '**.go'
     - '**.yml'
   pull_request:
-    branches: ["main"]  
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   test:
