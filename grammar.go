@@ -1,38 +1,48 @@
-// package grammar allows defining regexp rules with comments, whitespace and
+// Package grammar allows defining regexp rules with comments, whitespace and
 // newlines to make them less dense, and easier to read:
-//
-//    `                     // a NUMBER
-//     [+-]?                // first, match an optional sign
-//     (                    // then match integers or f.p. mantissas:
-//         \d+\.\d+         // mantissa of the form a.b
-//        |\d+\.            // mantissa of the form a.
-//        |\.\d+            // mantissa of the form .b
-//        |\d+              // integer of the form a
-//     )
-//     ( [eE] [+-]? \d+ )?  // finally, optionally match an exponent
-//    `
-//
-// result: [+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?
-//
-// Complex rules can be assembled by simpler rules (subrules) using string interpolation.
-//
-//     `
-//      ^
-//        ${NUMBER}        // start with number
-//        (?:              // don't capture
-//          \s+ ${NUMBER}  // followed by one ore more numbers, separated by whitespace
-//        )+
-//     $
-//    `
-//
+/*
+  	`                     // a NUMBER
+  	 [+-]?                // first, match an optional sign
+  	 (                    // then match integers or f.p. mantissas:
+  	     \d+\.\d+         // mantissa of the form a.b
+  	    |\d+\.            // mantissa of the form a.
+  	    |\.\d+            // mantissa of the form .b
+  	    |\d+              // integer of the form a
+  	 )
+  	 ( [eE] [+-]? \d+ )?  // finally, optionally match an exponent
+  	`
+
+   result: [+-]?(\d+\.\d+|\d+\.|\.\d+|\d+)([eE][+-]?\d+)?
+
+   Complex rules can be assembled by simpler rules (subrules) using string interpolation.
+
+  	 `
+  	  ^
+  	    ${NUMBER}        // start with number
+  	    (?:              // don't capture
+  	      \s+ ${NUMBER}  // followed by one ore more numbers, separated by whitespace
+  	    )+
+  	 $
+  	`
+*/
 // Any number of rules can be added to a grammar, dependent or independent,
 // as long as there are no cyclic dependencies.
-//
 package grammar
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
+)
+
+var (
+	errMissing     = errors.New("is missing")
+	errInvalid     = errors.New("is invalid")
+	errDuplicate   = errors.New("is duplicate")
+	errSelfRef     = errors.New("is self referencing")
+	errCyclic      = errors.New("has cyclic reference")
+	errCompiled    = errors.New("is already compiled")
+	errNotCompiled = errors.New("is not compiled")
 )
 
 // Make rule names type safe, too many strings on the road.
@@ -108,15 +118,15 @@ func (g *Grammar) AddVerbatim(name string, pattern string) error {
 
 func (g *Grammar) add(ruleName ruleName, pattern string) error {
 	if !ruleName.isValid() {
-		return fmt.Errorf("grammar %q, rulename %q not allowed", g.name, ruleName)
+		return fmt.Errorf("grammar %q, rulename %q: %w", g.name, ruleName, errInvalid)
 	}
 
 	if g.compiled {
-		return fmt.Errorf("grammar %q is already compiled, can't add rule %q", g.name, ruleName)
+		return fmt.Errorf("grammar %q, can't add rule %q: %w", g.name, ruleName, errCompiled)
 	}
 
 	if _, ok := g.rules[ruleName]; ok {
-		return fmt.Errorf("grammar %q, rule with name %q already exists", g.name, ruleName)
+		return fmt.Errorf("grammar %q, rule %q: %w", g.name, ruleName, errDuplicate)
 	}
 
 	r := &rule{name: ruleName, pattern: pattern}
@@ -124,11 +134,11 @@ func (g *Grammar) add(ruleName ruleName, pattern string) error {
 	r.subrules = findSubrules(r)
 	for _, subName := range r.subrules {
 		if !subName.isValid() {
-			return fmt.Errorf("grammar %q, rule %q, wrong subrule name %q", g.name, ruleName, subName)
+			return fmt.Errorf("grammar %q, rule %q, subrule %q: %w", g.name, ruleName, subName, errInvalid)
 		}
 
 		if subName == r.name {
-			return fmt.Errorf("grammar %q, rule %q is self referencing", g.name, ruleName)
+			return fmt.Errorf("grammar %q, rule %q: %w", g.name, ruleName, errSelfRef)
 		}
 	}
 
@@ -140,14 +150,14 @@ func (g *Grammar) add(ruleName ruleName, pattern string) error {
 // Compile all rules in grammar. Resolve dependencies, interpolate strings and compile all rules to regexp.
 func (g *Grammar) Compile() error {
 	if g.compiled {
-		return fmt.Errorf("grammar %q is already compiled", g.name)
+		return fmt.Errorf("grammar %q: %w", g.name, errCompiled)
 	}
 
 	// for all rules check if subrules exists in grammar
 	for _, rule := range g.rules {
 		for _, subName := range rule.subrules {
 			if _, ok := g.rules[subName]; !ok {
-				return fmt.Errorf("compiling grammar %q, rule %q depends on missing subrule %q", g.name, rule.name, subName)
+				return fmt.Errorf("grammar %q, rule %q, subrule %q: %w", g.name, rule.name, subName, errMissing)
 			}
 		}
 	}
@@ -206,11 +216,11 @@ func (r *rule) compile(replace replaceMap) error {
 func (g *Grammar) Rx(name string) (*regexp.Regexp, error) {
 	r, ok := g.rules[ruleName(name)]
 	if !ok {
-		return nil, fmt.Errorf("grammar %q, rule %q is not added", g.name, name)
+		return nil, fmt.Errorf("grammar %q, rule %q: %w", g.name, name, errMissing)
 	}
 
 	if !g.compiled {
-		return nil, fmt.Errorf("grammar %q is not compiled", g.name)
+		return nil, fmt.Errorf("grammar %q: %w", g.name, errNotCompiled)
 	}
 
 	return r.rx, nil

@@ -30,12 +30,7 @@ func (g *Grammar) toposort() ([]ruleName, error) {
 	var result []ruleName
 
 	// do til break condition
-	for {
-		// successful break, are we ready, topo map emptied?
-		if len(dag) == 0 {
-			break
-		}
-
+	for len(dag) != 0 {
 		nextNodes := nodesWithoutLinks(dag)
 
 		// cyclic dependency!
@@ -46,8 +41,8 @@ func (g *Grammar) toposort() ([]ruleName, error) {
 				remaining = append(remaining, ruleName)
 			}
 
-			// unsuccessful return with error
-			return nil, fmt.Errorf("grammar %q, (maybe) cyclic dependency in rules: %v", g.name, remaining)
+			// unsuccessful return with cyclic dependency error
+			return nil, fmt.Errorf("grammar %q, unresolved rules: %v, %w", g.name, remaining, errCyclic)
 		}
 
 		// handle the next nodes in topo sort order
@@ -68,7 +63,7 @@ func (g *Grammar) toposort() ([]ruleName, error) {
 	return result, nil
 }
 
-// nodesWithoutLinks returns terminal nodes
+// nodesWithoutLinks returns terminal nodes.
 func nodesWithoutLinks(topo nodes) []ruleName {
 	var result []ruleName
 
