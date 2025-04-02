@@ -31,8 +31,8 @@ func TestTrim(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := grammar.Trim(tc.input)
 			if got != tc.want {
 				t.Errorf("strip: %q, want: %q, got: %q", tc.input, tc.want, got)
@@ -176,10 +176,10 @@ func TestSubruleName(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		g := grammar.New("TESTS")
 
 		t.Run(tc.input, func(t *testing.T) {
+			t.Parallel()
 			err := g.Add("RULE", tc.input)
 			if tc.expectFail && err == nil {
 				t.Fatalf("Add(): %q, want: error, got: %q", tc.input, err)
@@ -207,10 +207,10 @@ func TestRuleName(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		g := grammar.New("TESTS")
 
 		t.Run(tc.input, func(t *testing.T) {
+			t.Parallel()
 			err := g.Add(tc.input, "any pattern")
 			if tc.expectFail && err == nil {
 				t.Fatalf("Add(): %q, want: error, got: %q", tc.input, err)
