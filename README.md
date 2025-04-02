@@ -6,7 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/gaissmai/grammar/badge.svg?branch=master)](https://coveralls.io/github/gaissmai/grammar?branch=master)
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-`package grammar` is designed to make long and convoluted regular expressions easier to handle. 
+Package `grammar` is designed to make long and convoluted regular expressions easier to handle. 
 
 ## Features
 * Enable the use of whitespaces within regexes to make them less dense.
